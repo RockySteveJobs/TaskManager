@@ -1,6 +1,6 @@
 ##使用线程池(Executor)实现异步任务的添加、执行、回调，完全替代Thread、AsyncTask ，最大程度的解放你的双手!
 	
-	github : [https://github.com/RockySteveJobs](https://github.com/RockySteveJobs)
+github地址 : [https://github.com/RockySteveJobs](https://github.com/RockySteveJobs)
 	
 ###How to use?
 
