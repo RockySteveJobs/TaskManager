@@ -1,6 +1,6 @@
 package com.rocky.eagle.bean;
 
-import com.rocky.eagle.task.ExcuteTask;
+import com.rocky.eagle.task.ExecuteTask;
 
 /**
  * Start
@@ -14,10 +14,10 @@ import com.rocky.eagle.task.ExcuteTask;
  * <p/>
  * Done
  */
-public class CommonExcuteTask extends ExcuteTask {
+public class CommonExecuteTask extends ExecuteTask {
 
     @Override
-    public ExcuteTask doTask() {
+    public ExecuteTask doTask() {
 
         /**
          * 做一些耗时操作

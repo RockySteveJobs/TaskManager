@@ -3,11 +3,11 @@ package com.rocky.eagle.task;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 
 import com.rocky.eagle.utils.LogUtils;
 
-import java.lang.ref.SoftReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Done
  */
-public class ExcuteTaskManager implements Runnable {
+public class ExecuteTaskManager implements Runnable {
 
     /**
      * 线程执行完事儿后默认的回调类型
@@ -64,7 +64,7 @@ public class ExcuteTaskManager implements Runnable {
     /**
      * 任务执行队列
      */
-    private static ConcurrentLinkedQueue<ExcuteTask> allExcuteTask = null/*new ConcurrentLinkedQueue<ExcuteTask>()*/;
+    private static ConcurrentLinkedQueue<ExecuteTask> allExecuteTask = null/*new ConcurrentLinkedQueue<ExcuteTask>()*/;
     /**
      * 回调接口列表
      */
@@ -94,25 +94,27 @@ public class ExcuteTaskManager implements Runnable {
      * 对外界开放的回调接口
      */
     public interface GetExcuteTaskCallback {
-        void onDataLoaded(ExcuteTask task);
+        void onDataLoaded(ExecuteTask task);
     }
 
 
     /**
      * 直接把数据发送到主线程
      */
-    private static Handler handler = new Handler(Looper.getMainLooper()) {
+    private final static Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             long start = System.currentTimeMillis();
-            if (msg != null && msg.obj != null
-                    && msg.obj instanceof ExcuteTask) {
-                switch (msg.what) {
-                    case COMMON_EXCUTE_TASK_TYPE:
-                        ExcuteTaskManager.getInstance().doCommonHandler((ExcuteTask) msg.obj);
-                        break;
-                    /** 如果想要添加其他类型的回调，可以在此加入代码*/
-                }
+
+            switch (msg.what) {
+                case COMMON_EXCUTE_TASK_TYPE:
+                    if (msg != null && msg.obj != null
+                            && msg.obj instanceof ExecuteTask) {
+                        ExecuteTaskManager.getInstance().doCommonHandler((ExecuteTask) msg.obj);
+                    }
+                    break;
+                /** 如果想要添加其他类型的回调，可以在此加入代码*/
+
             }
             long end = System.currentTimeMillis();
 
@@ -121,17 +123,17 @@ public class ExcuteTaskManager implements Runnable {
     };
 
 
-    private static ExcuteTaskManager instance = null;
+    private static ExecuteTaskManager instance = null;
 
-    private ExcuteTaskManager() {
+    private ExecuteTaskManager() {
         LogUtils.i("private ExcuteTaskManager() { 当前的线程Id为：" + Thread.currentThread().getId());
     }
 
-    public static ExcuteTaskManager getInstance() {
+    public static ExecuteTaskManager getInstance() {
         if (instance == null) {
-            synchronized (ExcuteTaskManager.class) {
+            synchronized (ExecuteTaskManager.class) {
                 if (instance == null) {
-                    instance = new ExcuteTaskManager();
+                    instance = new ExecuteTaskManager();
                 }
             }
         }
@@ -162,7 +164,7 @@ public class ExcuteTaskManager implements Runnable {
             }
             threadPool = Executors.newFixedThreadPool(threadNum);
             singlePool = Executors.newSingleThreadScheduledExecutor();
-            allExcuteTask = new ConcurrentLinkedQueue<>();
+            allExecuteTask = new ConcurrentLinkedQueue<>();
             uniqueListenerList = new ConcurrentHashMap<>();
 
             /**
@@ -187,9 +189,9 @@ public class ExcuteTaskManager implements Runnable {
          */
         isRunning = false;
         isHasInit = false;
-        if (allExcuteTask != null) {
-            allExcuteTask.clear();
-            allExcuteTask = null;
+        if (allExecuteTask != null) {
+            allExecuteTask.clear();
+            allExecuteTask = null;
         }
         if (uniqueListenerList != null) {
             uniqueListenerList.clear();
@@ -211,13 +213,13 @@ public class ExcuteTaskManager implements Runnable {
      *
      * @param task 可执行的任务对象
      */
-    public void newExcuteTask(ExcuteTask task) {
+    public void newExcuteTask(ExecuteTask task) {
         if (task != null) {
-            allExcuteTask.offer(task);
-            LogUtils.i("ExcuteTaskManager 添加任务成功之后" + "allExcuteTask.size()=" + allExcuteTask.size());
+            allExecuteTask.offer(task);
+            LogUtils.i("ExcuteTaskManager 添加任务成功之后" + "allExcuteTask.size()=" + allExecuteTask.size());
             long timeOne = System.currentTimeMillis();
-            synchronized (allExcuteTask) {
-                allExcuteTask.notifyAll();
+            synchronized (allExecuteTask) {
+                allExecuteTask.notifyAll();
                 LogUtils.i("ExcuteTaskManager =====>处于唤醒状态");
             }
             long timeTwo = System.currentTimeMillis();
@@ -234,7 +236,7 @@ public class ExcuteTaskManager implements Runnable {
      * @param task     加入的任务Task
      * @param callback 任务的回调接口GetDataCallback
      */
-    public void getData(ExcuteTask task, GetExcuteTaskCallback callback) {
+    public void getData(ExecuteTask task, GetExcuteTaskCallback callback) {
         /**
          *  把CallBack 接口加入列表中,用完之后移除
          */
@@ -268,13 +270,19 @@ public class ExcuteTaskManager implements Runnable {
      *
      * @param task 添加的任务对象
      */
-    public void removeExcuteTask(ExcuteTask task) {
+    public void removeExcuteTask(ExecuteTask task) {
         if (task != null) {
             uniqueListenerList.remove(task.getUniqueID());
-            allExcuteTask.remove(task);
+            allExecuteTask.remove(task);
         } else {
             LogUtils.w("ExcuteTaskManager====您所要移除的任务为null,移除失败");
         }
+    }
+
+
+    public void log()
+    {
+        Log.i("ExcuteTaskManager", "allExcuteTask " + allExecuteTask.size() + " uniqueListenerList " + uniqueListenerList.size());
     }
 
 
@@ -282,7 +290,7 @@ public class ExcuteTaskManager implements Runnable {
      * 清除所有的任务
      */
     public void removeAllExcuteTask() {
-        allExcuteTask.clear();
+        allExecuteTask.clear();
         uniqueListenerList.clear();
     }
 
@@ -297,33 +305,47 @@ public class ExcuteTaskManager implements Runnable {
         // TODO Auto-generated method stub
         while (isRunning) {
 
-            LogUtils.i("ExcuteTaskManager====准备开始执行任务 总任务个数为  allExcuteTask.size()=" + allExcuteTask.size());
+            LogUtils.i("ExcuteTaskManager====准备开始执行任务 总任务个数为  allExcuteTask.size()=" + allExecuteTask.size());
 
             /**
              * 从allExcuteTask取任务
              */
-            ExcuteTask lastExcuteTask = allExcuteTask.poll();
+            ExecuteTask lastExecuteTask = allExecuteTask.poll();
 
-            LogUtils.i("ExcuteTaskManager====从allExcuteTask取出了一个任务  allExcuteTask.size()=" + allExcuteTask.size());
-            if (lastExcuteTask != null) {
+            LogUtils.i("ExcuteTaskManager====从allExcuteTask取出了一个任务  allExcuteTask.size()=" + allExecuteTask.size());
+            if (lastExecuteTask != null) {
                 try {
-                    LogUtils.i("ExcuteTaskManager任务ID" + lastExcuteTask.getUniqueID());
+                    LogUtils.i("ExcuteTaskManager任务ID" + lastExecuteTask.getUniqueID());
                     /**
                      * 真正开始执行任务，
                      * 所有的耗时任务都是在子线程中执行
                      */
-                    doExcuteTask(lastExcuteTask);
+                    doExcuteTask(lastExecuteTask);
                 } catch (Exception e) {
                     // TODO: handle exception
                     LogUtils.e("ExcuteTaskManager=====>执行任务发生了异常，信息为：" + e.getMessage());
                     e.printStackTrace();
+
+                    /**
+                     * 处理异常的回调
+                     */
+                    lastExecuteTask.setStatus(ExecuteTask.EXCUTE_TASK_ERROR);
+                    if (lastExecuteTask.isMainThread()) {
+                        Message msg = Message.obtain();
+                        msg.what = COMMON_EXCUTE_TASK_TYPE;
+                        msg.obj = lastExecuteTask;
+                        handler.sendMessage(msg);
+                    } else {
+                        doCommonHandler(lastExecuteTask);
+                    }
+                    uniqueListenerList.remove(lastExecuteTask.getUniqueID());
                 }
                 LogUtils.i("任务仍在执行,ExcuteTaskManager线程处于运行状态,当前的线程的ID为：" + Thread.currentThread().getId());
             } else {
                 LogUtils.i("任务执行完毕,ExcuteTaskManager线程处于等待状态,当前的线程的ID为：" + Thread.currentThread().getId());
                 try {
-                    synchronized (allExcuteTask) {
-                        allExcuteTask.wait();
+                    synchronized (allExecuteTask) {
+                        allExecuteTask.wait();
                     }
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
@@ -343,9 +365,9 @@ public class ExcuteTaskManager implements Runnable {
      *
      * @param task ExcuteTask对象
      */
-    private void doExcuteTask(ExcuteTask task) {
+    private void doExcuteTask(ExecuteTask task) {
 
-        ExcuteTask result = task.doTask();
+        ExecuteTask result = task.doTask();
 
         /**
          *
@@ -363,10 +385,14 @@ public class ExcuteTaskManager implements Runnable {
              *  只在这一个地方发送就行，否者会发生错误！
              */
 
-            Message msg = Message.obtain();
-            msg.what = COMMON_EXCUTE_TASK_TYPE;
-            msg.obj = result;
-            handler.sendMessage(msg);
+            if (result.isMainThread()) {
+                Message msg = Message.obtain();
+                msg.what = COMMON_EXCUTE_TASK_TYPE;
+                msg.obj = result;
+                handler.sendMessage(msg);
+            } else {
+                doCommonHandler(task);
+            }
         } else {
             uniqueListenerList.remove(task.getUniqueID());
         }
@@ -378,7 +404,7 @@ public class ExcuteTaskManager implements Runnable {
      *
      * @param task ExcuteTask对象
      */
-    private void doCommonHandler(ExcuteTask task) {
+    private void doCommonHandler(ExecuteTask task) {
         long start = System.currentTimeMillis();
         LogUtils.i("已经进入了private void doCommonHandler(Message msg) {");
         if (task != null && uniqueListenerList.containsKey(task.getUniqueID())) {

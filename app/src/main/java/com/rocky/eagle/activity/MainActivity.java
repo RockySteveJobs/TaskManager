@@ -7,11 +7,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.rocky.eagle.R;
-import com.rocky.eagle.bean.BitmapExcuteTask;
-import com.rocky.eagle.bean.CommonExcuteTask;
-import com.rocky.eagle.bean.JsonExcuteTask;
-import com.rocky.eagle.task.ExcuteTask;
-import com.rocky.eagle.task.ExcuteTaskManager;
+import com.rocky.eagle.bean.BitmapExecuteTask;
+import com.rocky.eagle.bean.CommonExecuteTask;
+import com.rocky.eagle.bean.JsonExecuteTask;
+import com.rocky.eagle.bean.ManyExceptionExecuteTask;
+import com.rocky.eagle.bean.ManyStringExecuteTask;
+import com.rocky.eagle.task.ExecuteTask;
+import com.rocky.eagle.task.ExecuteTaskManager;
 import com.rocky.eagle.utils.LogUtils;
 
 
@@ -30,7 +32,7 @@ import java.util.Map;
  * <p/>
  * Done
  */
-public class MainActivity extends Activity implements View.OnClickListener, ExcuteTaskManager.GetExcuteTaskCallback {
+public class MainActivity extends Activity implements View.OnClickListener, ExecuteTaskManager.GetExcuteTaskCallback {
 
     private TextView txtv_TestJson, txtv_Json,
             txtv_TestManyTask, txtv_ManyTask,
@@ -74,12 +76,24 @@ public class MainActivity extends Activity implements View.OnClickListener, Excu
     }
 
     @Override
-    public void onDataLoaded(ExcuteTask task) {
+    protected void onPause() {
+        super.onPause();
+        ExecuteTaskManager.getInstance().log();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+    }
+
+    @Override
+    public void onDataLoaded(ExecuteTask task) {
         if (task == null) {
             return;
         }
 
-        if (task instanceof JsonExcuteTask) {
+        if (task instanceof JsonExecuteTask) {
 
             if (task.getStatus() >= 0 && task.getJson() != null) {
                 txtv_Json.setText(task.getJson());
@@ -87,14 +101,14 @@ public class MainActivity extends Activity implements View.OnClickListener, Excu
                 LogUtils.i("请求失败");
             }
 
-        } else if (task instanceof CommonExcuteTask) {
+        } else if (task instanceof CommonExecuteTask) {
 
             reqNum++;
             txtv_ManyTask.setText("第  " + reqNum + "  次请求完成");
 
-        } else if (task instanceof BitmapExcuteTask) {
+        } else if (task instanceof BitmapExecuteTask) {
 
-            BitmapExcuteTask bitmapTask = (BitmapExcuteTask) task;
+            BitmapExecuteTask bitmapTask = (BitmapExecuteTask) task;
             if (bitmapTask.bitmap != null) {
                 imgv_Bitmap.setImageBitmap(bitmapTask.bitmap);
             }
@@ -103,12 +117,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Excu
     }
 
     private void testJsonTask() {
-        JsonExcuteTask jsonTask = new JsonExcuteTask();
+        JsonExecuteTask jsonTask = new JsonExecuteTask();
         Map<String, Object> map = new HashMap<>();
         map.put("Url", "http://www.google.com");
         map.put("Count", 20);
         jsonTask.setTaskParam(map);
-        ExcuteTaskManager.getInstance().getData(jsonTask, this);
+        ExecuteTaskManager.getInstance().getData(jsonTask, this);
     }
 
     /**
@@ -118,11 +132,21 @@ public class MainActivity extends Activity implements View.OnClickListener, Excu
 
     private void testManyTask() {
         for (int i = 0; i < 100; i++) {
-            ExcuteTaskManager.getInstance().getData(new CommonExcuteTask(), this);
+            ExecuteTaskManager.getInstance().getData(new CommonExecuteTask(), this);
+        }
+    }
+
+    private void testNestManyTask() {
+        for (int i = 0; i < 4; i++) {
+            if (i % 2 == 0) {
+                ExecuteTaskManager.getInstance().getData(new ManyExceptionExecuteTask(), this);
+            } else {
+                ExecuteTaskManager.getInstance().getData(new ManyStringExecuteTask(), this);
+            }
         }
     }
 
     private void testBitmap() {
-        ExcuteTaskManager.getInstance().getData(new BitmapExcuteTask(), this);
+        ExecuteTaskManager.getInstance().getData(new BitmapExecuteTask(), this);
     }
 }

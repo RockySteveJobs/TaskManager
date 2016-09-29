@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory;
 
 import com.rocky.eagle.R;
 import com.rocky.eagle.activity.MainApplication;
-import com.rocky.eagle.task.ExcuteTask;
+import com.rocky.eagle.task.ExecuteTask;
 
 /**
  * Start
@@ -19,12 +19,12 @@ import com.rocky.eagle.task.ExcuteTask;
  * <p/>
  * Done
  */
-public class BitmapExcuteTask extends ExcuteTask {
+public class BitmapExecuteTask extends ExecuteTask {
 
     public Bitmap bitmap;
 
     @Override
-    public ExcuteTask doTask() {
+    public ExecuteTask doTask() {
         /**
          * 执行 Decode 或者压缩等耗时操作
          */

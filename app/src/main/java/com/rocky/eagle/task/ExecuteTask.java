@@ -1,5 +1,7 @@
 package com.rocky.eagle.task;
 
+import android.os.Looper;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -19,7 +21,10 @@ import java.util.Map;
  *
  * Done
  */
-public abstract class ExcuteTask implements Runnable, Serializable {
+public abstract class ExecuteTask implements Runnable, Serializable {
+
+    public static final int EXCUTE_TASK_ERROR = -1;
+
     /**
      * 这个会自动生成，不用自己设置
      */
@@ -45,7 +50,9 @@ public abstract class ExcuteTask implements Runnable, Serializable {
      */
     protected Object result;
 
-    public ExcuteTask() {
+    private boolean isMainThread = Looper.myLooper() == Looper.getMainLooper();
+
+    public ExecuteTask() {
     }
 
     public int getUniqueID() {
@@ -90,6 +97,15 @@ public abstract class ExcuteTask implements Runnable, Serializable {
         this.result = result;
     }
 
+
+    public boolean isMainThread() {
+        return isMainThread;
+    }
+
+    public void setIsMainThread(boolean isMainThread) {
+        this.isMainThread = isMainThread;
+    }
+
     @Override
     public void run() {
         doTask();
@@ -107,5 +123,5 @@ public abstract class ExcuteTask implements Runnable, Serializable {
      *
      * @return
      */
-    public abstract ExcuteTask doTask();
+    public abstract ExecuteTask doTask();
 }
