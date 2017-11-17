@@ -1,24 +1,24 @@
-##使用线程池(Executor)实现异步任务的添加、执行、回调，完全替代Thread、AsyncTask ，最大程度的解放你的双手!
+## 使用线程池(Executor)实现异步任务的添加、执行、回调，完全替代Thread、AsyncTask ，最大程度的解放你的双手!
 	
 github地址 : [https://github.com/RockySteveJobs](https://github.com/RockySteveJobs)
 	
-###How to use?
+### How to use?
 
-####1、first step:
+#### 1、first step:
 
 	copy the file "ExcuteTaskManager" and "ExcuteTask"  to your project 
 
-####2、second step:
+#### 2、second step:
 
 	init the library in your application or activity
 
 	ExcuteTaskManager.getInstance().init();
 
-####3、third step:
+#### 3、third step:
 
 	write a file extends "ExcuteTask" (eg: JsonExcuteTask)
 
-####4、fourth step:
+#### 4、fourth step:
 
 	ExcuteTaskManager.getInstance().newExcuteTask(new JsonExcuteTask());
 
@@ -36,7 +36,7 @@ github地址 : [https://github.com/RockySteveJobs](https://github.com/RockySteve
 
 ### welcome to fork 、follow and star , thank you very much !  ^_^
 
-##核心代码(Core code)
+## 核心代码(Core code)
 
 	package com.rocky.eagle.task;
 
